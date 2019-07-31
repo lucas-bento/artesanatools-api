@@ -1,0 +1,108 @@
+const mongoose = require("mongoose")
+var Schema = mongoose.Schema;
+var ObjectId = mongoose.Schema.Types.ObjectId;
+
+mongoose.connect("mongodb://localhost/test-artesanatools", { useNewUrlParser: true } )
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+
+const ItemSchema = new Schema({
+    name: String,
+    description:String,
+    unit:String,
+    image:String
+});
+const Item = mongoose.model("Item", ItemSchema)
+
+
+const MaterialSchema = new Schema({
+    item:ItemSchema,
+    cost:Number,
+    quantity:Number
+});
+const Material = mongoose.model("Material", MaterialSchema)
+
+
+const ProductSchema = new Schema({
+    item:ItemSchema,
+    materials: [MaterialSchema],
+    workHours:Number,
+    extraCosts:Number,
+    freightCost:Number,
+    margin:Number,
+});
+const Product = mongoose.model("Product", ProductSchema)
+
+
+const MaterialsStock = mongoose.model(
+    "MaterialsStock", {
+        user:ObjectId,
+        materials:[MaterialSchema]
+})
+
+const ProductsStock = mongoose.model(
+    "ProductsStock", {
+        user:ObjectId,
+        products:[ProductSchema]
+})
+
+const SaleChannelSchema = new Schema({
+    name:String,
+    description:String,
+    commision:Number
+})
+
+const SaleSchema = new Schema({
+    date:Date,
+    seller:String,
+    buyer:String,
+    items:[ProductSchema],
+    saleChannel:SaleChannelSchema,
+    freight:{
+        tracking:String,
+        price:Number
+    },
+    totalPrice:Number
+})
+
+const SalesHistory = mongoose.model(
+    "SalesHistory", {
+       user:ObjectId, 
+       sales:[SaleSchema]
+})
+
+const PurchaseSchema = new Schema({
+    date:Date,
+    supplier:String,
+    items:[ItemSchema],
+    freight:{
+        tracking:String,
+        price:Number
+    },
+    totalPrice:Number
+})
+
+const PurchaseHistory = mongoose.model(
+    "PurchaseHistory", {
+       user:ObjectId, 
+       sales:[SaleSchema]
+})
+
+
+db.once('open', function() {
+    var myProduct = new Product({
+        item:{name:"Nice product",
+              description:"A product tha is very nice",
+              unit:"Couric",
+              image:"http://image.jpg"
+        },
+        workHours:1,
+        extraCosts:2,
+        freightCost:3,
+        margin:4
+    });
+
+    myProduct.save((err, p) =>{
+        if (err) console.log(err)
+    })
+});
